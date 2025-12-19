@@ -1,96 +1,228 @@
-# Collecteur DRH Luxembourg
+# LinkedIn Post Tracker & Generator
 
-Workflow OpenAI Agents + Bright Data MCP pour collecter les contacts DRH au Luxembourg.
+Système multi-agents pour tracker, analyser et générer des posts LinkedIn en utilisant l'OpenAI Agents SDK et Bright Data.
+
+## Fonctionnalités
+
+- **Post Tracker** : Suivez les posts LinkedIn de vos concurrents et analysez leur engagement
+- **Post Generator** : Générez des posts LinkedIn originaux basés sur l'analyse de posts performants
+- **Spin Workflow** : Transformez un post viral en contenu original pour votre marque (sans patterns IA détectables)
+- **Growth Signals** : Détectez les signaux de croissance (recrutements marketing, levées de fonds)
+- **Dashboard** : Interface Next.js pour visualiser et gérer tout
+
+## Prérequis
+
+- Node.js 18+
+- Python 3.10+
+- Compte OpenAI avec accès API
+- Compte Bright Data (pour le scraping LinkedIn)
+
+---
 
 ## Installation
 
+### 1. Cloner le repo
+
 ```bash
-npm install
+git clone https://github.com/poilopo2001/linkedin-post-tracker.git
+cd linkedin-post-tracker
 ```
 
-## Configuration
+### 2. Installer les dépendances
 
-Copie `.env.example` vers `.env` et configure tes clés :
+```bash
+# Dépendances Node.js (workflows TypeScript)
+npm install
+
+# Dépendances Python (API FastAPI)
+cd api
+pip install -r requirements.txt
+cd ..
+
+# Dépendances Dashboard
+cd dashboard
+npm install
+cd ..
+```
+
+### 3. Configurer les variables d'environnement
 
 ```bash
 cp .env.example .env
 ```
 
-Variables requises :
-- `OPENAI_API_KEY` : Clé API OpenAI
-- `BRIGHTDATA_MCP_TOKEN` : Token Bright Data MCP
+Édite le fichier `.env` avec tes clés :
 
-## Utilisation
+```env
+# OpenAI API Key
+OPENAI_API_KEY=sk-...
 
-### Collecte standard
+# Bright Data MCP Token
+BRIGHTDATA_MCP_TOKEN=...
+```
 
+---
+
+## Où trouver les clés API
+
+### OpenAI API Key
+
+1. Va sur https://platform.openai.com/
+2. Connecte-toi ou crée un compte
+3. Clique sur ton profil (en haut à droite) → **API Keys**
+4. Clique sur **Create new secret key**
+5. Copie la clé (commence par `sk-...`)
+6. Colle-la dans `.env` sous `OPENAI_API_KEY`
+
+> **Note** : Tu as besoin de crédits sur ton compte OpenAI. Le modèle utilisé est `gpt-4o` (ou `gpt-4o-mini` pour certains agents).
+
+### Bright Data MCP Token
+
+1. Va sur https://brightdata.com/
+2. Crée un compte ou connecte-toi
+3. Dans le dashboard, va dans **Settings** → **API tokens**
+4. Crée un nouveau token avec les permissions nécessaires
+5. Copie le token et colle-le dans `.env` sous `BRIGHTDATA_MCP_TOKEN`
+
+> **Note** : Bright Data est utilisé pour scraper les données LinkedIn (profils, posts, engagement). Tu peux utiliser leur offre gratuite pour tester.
+
+---
+
+## Lancer le projet
+
+### Option A : Tout lancer (recommandé)
+
+Ouvre 3 terminaux :
+
+**Terminal 1 - API Backend (FastAPI)**
 ```bash
+cd api
+python -m uvicorn main:app --reload --port 8000
+```
+
+**Terminal 2 - Dashboard (Next.js)**
+```bash
+cd dashboard
 npm run dev
 ```
 
-### Collecte avec options CLI
+**Terminal 3 - Workflows TypeScript (optionnel)**
+```bash
+# Pour tester un workflow directement
+npx tsx src/workflow-tracker.ts scrape "https://linkedin.com/company/exemple"
+```
+
+### Accès
+
+- **API** : http://localhost:8000
+- **API Docs** : http://localhost:8000/docs
+- **Dashboard** : http://localhost:3000
+
+---
+
+## Utilisation
+
+### Via le Dashboard (recommandé)
+
+1. Ouvre http://localhost:3000
+2. **Tracker** : Ajoute des URLs LinkedIn à suivre
+3. **Generate** : Configure ton profil entreprise et génère des posts
+4. **Trends** : Visualise les tendances d'engagement
+
+### Via l'API directement
 
 ```bash
-# 100 entreprises max
-npm run collect -- --max=100
+# Analyser un post
+curl -X POST http://localhost:8000/api/generator/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"post_url": "https://linkedin.com/posts/..."}'
 
-# Secteur finance uniquement
-npm run collect -- --sector=finance
-
-# Plusieurs secteurs
-npm run collect -- --sector=finance,tech,industrie
-
-# Export JSON
-npm run collect -- --json
-
-# Uniquement les emails
-npm run collect -- --emails-only --require-email
-
-# Aide
-npm run collect -- --help
+# Générer un post
+curl -X POST http://localhost:8000/api/generator/generate \
+  -H "Content-Type: application/json" \
+  -d '{"theme": "leadership", "tone": "professional"}'
 ```
+
+### Via CLI (workflows TypeScript)
+
+```bash
+# Tracker - Scraper un profil LinkedIn
+npx tsx src/workflow-tracker.ts scrape "https://linkedin.com/company/exemple"
+
+# Generator - Analyser des posts
+npx tsx src/workflow-generator.ts analyze
+
+# Growth - Détecter des signaux de croissance
+npm run growth
+
+# Collecteur DRH (workflow original)
+npm run collect -- --max=100 --sector=tech
+```
+
+---
 
 ## Architecture
 
 ```
-src/
-├── index.ts      # Point d'entrée principal
-├── collect.ts    # Script CLI simplifié
-├── workflow.ts   # Workflow de collecte (4 phases)
-├── agents.ts     # Agents OpenAI spécialisés
-├── schemas.ts    # Schémas Zod (validation données)
-└── export.ts     # Export CSV/JSON
+linkedin-post-tracker/
+├── api/                    # Backend FastAPI (Python)
+│   ├── main.py            # Point d'entrée API
+│   ├── routes/            # Endpoints (tracker, generator, posts, etc.)
+│   ├── services/          # Services métier
+│   └── models.py          # Modèles SQLAlchemy
+│
+├── src/                    # Workflows TypeScript
+│   ├── workflow-tracker.ts    # Suivi posts LinkedIn
+│   ├── workflow-generator.ts  # Génération de contenu
+│   ├── workflow-spin.ts       # Transformation de posts
+│   ├── workflow-growth.ts     # Détection signaux croissance
+│   ├── agents-*.ts            # Agents OpenAI spécialisés
+│   └── schemas-*.ts           # Validation Zod
+│
+├── dashboard/              # Frontend Next.js
+│   ├── app/               # Pages (App Router)
+│   ├── components/        # Composants React
+│   └── lib/               # Utilitaires et API client
+│
+└── data/                   # Base de données SQLite (local)
 ```
 
-## Workflow
+## Agents IA
 
-1. **Company Finder** : Recherche entreprises luxembourgeoises (LinkedIn, annuaires)
-2. **DRH Finder** : Identifie les DRH/responsables RH dans chaque entreprise
-3. **Contact Enricher** : Complète les données manquantes (emails, téléphones)
-4. **Results Compiler** : Dédoublonne et compile les résultats
+Le système utilise plusieurs agents spécialisés :
 
-## Sources de données (via Bright Data)
+| Agent | Rôle |
+|-------|------|
+| **Post Analyzer** | Analyse la structure, le hook, le thème universel d'un post |
+| **Angle Generator** | Génère des angles créatifs et originaux |
+| **Post Writer** | Écrit des posts humains sans patterns IA |
+| **Humanizer** | Élimine les dernières traces de style IA |
+| **Tracker Agent** | Scrape et analyse l'engagement LinkedIn |
 
-- LinkedIn Company/People profiles
-- Sites web des entreprises
-- Annuaires business (Paperjam, Editus)
-- Recherche Google
+---
 
-## Output
+## Troubleshooting
 
-Les fichiers sont exportés dans `./output/` :
-- `drh_luxembourg_YYYY-MM-DD.csv` : Export complet
-- `emails_drh_YYYY-MM-DD.csv` : Liste emails uniquement
+### "OPENAI_API_KEY not found"
+→ Vérifie que ton `.env` est bien à la racine du projet et contient la clé.
 
-## Conformité RGPD
+### "Bright Data connection failed"
+→ Vérifie ton token Bright Data et que tu as des crédits disponibles.
 
-Ce collecteur est conçu pour la prospection B2B. Assure-toi de :
-- Avoir une base légale (intérêt légitime)
-- Permettre le droit d'opposition (lien désinscription)
-- Ne pas utiliser pour du spam
+### "Database locked"
+→ Ferme toutes les connexions à `data/posts.db` et relance.
 
-## Limites
+### Le dashboard ne charge pas
+→ Vérifie que l'API tourne sur le port 8000 (`cd api && python -m uvicorn main:app --reload`).
 
-- Rate limiting automatique entre les requêtes
-- Respecte les ToS de LinkedIn et Bright Data
-- Données professionnelles uniquement
+---
+
+## Licence
+
+MIT
+
+---
+
+## Contribution
+
+Les PRs sont bienvenues ! Pour les bugs, ouvre une issue.

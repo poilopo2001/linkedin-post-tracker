@@ -20,7 +20,7 @@ from services.collector import collect_company_posts, collect_all_companies
 router = APIRouter(prefix="/api/posts", tags=["posts"])
 
 
-@router.get("/", response_model=List[PostSchema])
+@router.get("", response_model=List[PostSchema])
 def list_posts(
     company_id: Optional[int] = None,
     category: Optional[str] = None,
@@ -186,7 +186,8 @@ def list_categories():
             {"id": "events", "label": "Événements", "color": "#F59E0B"},
             {"id": "csr", "label": "RSE", "color": "#06B6D4"},
             {"id": "internal_news", "label": "Actualités internes", "color": "#EC4899"},
-            {"id": "partnerships", "label": "Partenariats", "color": "#EF4444"}
+            {"id": "partnerships", "label": "Partenariats", "color": "#EF4444"},
+            {"id": "fundraising", "label": "Levée de fonds", "color": "#22C55E"}
         ]
     }
 

@@ -12,7 +12,7 @@ from schemas import Company as CompanySchema, CompanyCreate, CompanyUpdate
 router = APIRouter(prefix="/api/companies", tags=["companies"])
 
 
-@router.get("/", response_model=List[CompanySchema])
+@router.get("", response_model=List[CompanySchema])
 def list_companies(
     skip: int = 0,
     limit: int = 100,
@@ -74,7 +74,7 @@ def get_company(company_id: int, db: Session = Depends(get_db)):
     }
 
 
-@router.post("/", response_model=CompanySchema)
+@router.post("", response_model=CompanySchema)
 def create_company(company: CompanyCreate, db: Session = Depends(get_db)):
     """Ajoute une nouvelle entreprise à tracker"""
     # Vérifier si l'URL LinkedIn existe déjà

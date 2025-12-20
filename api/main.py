@@ -43,7 +43,8 @@ app = FastAPI(
     title="LinkedIn Posts Dashboard API",
     description="API pour tracker et analyser les posts LinkedIn des entreprises luxembourgeoises",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
+    redirect_slashes=False
 )
 
 # Configuration CORS

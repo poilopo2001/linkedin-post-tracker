@@ -39,7 +39,7 @@ def serialize_profile(profile: UserCompanyProfile) -> dict:
     }
 
 
-@router.get("/", response_model=Optional[ProfileSchema])
+@router.get("", response_model=Optional[ProfileSchema])
 def get_profile(db: Session = Depends(get_db)):
     """Recupere le profil entreprise actif (un seul par utilisateur)"""
     profile = db.query(UserCompanyProfile).filter(
@@ -65,7 +65,7 @@ def get_profile_by_id(profile_id: int, db: Session = Depends(get_db)):
     return serialize_profile(profile)
 
 
-@router.post("/", response_model=ProfileSchema)
+@router.post("", response_model=ProfileSchema)
 def create_profile(profile_data: UserCompanyProfileCreate, db: Session = Depends(get_db)):
     """Cree un nouveau profil entreprise"""
     # Desactiver les anciens profils actifs

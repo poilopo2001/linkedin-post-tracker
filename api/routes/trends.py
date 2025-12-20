@@ -13,7 +13,7 @@ from schemas import DashboardStats, CategoryCount, SentimentCount, CompanyActivi
 router = APIRouter(prefix="/api/trends", tags=["trends"])
 
 
-@router.get("/", response_model=DashboardStats)
+@router.get("", response_model=DashboardStats)
 def get_dashboard_stats(
     days: int = Query(30, description="Nombre de jours pour les tendances"),
     db: Session = Depends(get_db)

@@ -73,6 +73,7 @@ CATÉGORIES (choisis UNE seule):
 - csr: RSE, environnement, social, diversité, impact, développement durable
 - internal_news: nominations, anniversaires entreprise, nouveaux bureaux, équipe
 - partnerships: partenariats, collaborations, acquisitions, clients, cas d'usage
+- fundraising: levées de fonds, financement, investissement, série A/B/C/D, capital, VCs
 
 ANALYSE:
 1. Lis attentivement le contenu du post

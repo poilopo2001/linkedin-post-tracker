@@ -10,7 +10,8 @@ export const PostCategoryEnum = z.enum([
   "events",             // Événements, conférences, webinars
   "csr",                // RSE, environnement, social
   "internal_news",      // Actualités internes, nominations
-  "partnerships"        // Partenariats, collaborations
+  "partnerships",       // Partenariats, collaborations
+  "fundraising"         // Levées de fonds, financement, série A/B/C
 ]);
 
 export type PostCategory = z.infer<typeof PostCategoryEnum>;

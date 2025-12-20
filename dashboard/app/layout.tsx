@@ -4,6 +4,7 @@ import './globals.css';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { BarChart3, Building2, FileText, TrendingUp, Linkedin, Sparkles, Users } from 'lucide-react';
+import { Toaster } from 'sonner';
 
 export default function RootLayout({
   children,
@@ -83,6 +84,7 @@ export default function RootLayout({
             </div>
           </main>
         </div>
+        <Toaster position="bottom-right" richColors />
       </body>
     </html>
   );

@@ -118,8 +118,8 @@ class TrackerScheduler:
     async def run_batch_scrape(self, profile_ids: List[int]):
         """Execute the TypeScript workflow for batch scraping"""
         try:
-            ids_json = json.dumps(profile_ids)
-            cmd = f'npx tsx src/workflow-tracker.ts batch {ids_json}'
+            ids_str = ' '.join(map(str, profile_ids))
+            cmd = f'npx tsx src/workflow-tracker.ts batch {ids_str}'
 
             logger.info(f"Running batch scrape: {cmd}")
 

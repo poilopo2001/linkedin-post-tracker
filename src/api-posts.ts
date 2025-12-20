@@ -119,7 +119,8 @@ app.get("/categories", (req, res) => {
       { id: "events", label: "Événements", description: "Conférences, webinars" },
       { id: "csr", label: "RSE", description: "Environnement, social" },
       { id: "internal_news", label: "Actualités internes", description: "Nominations, équipe" },
-      { id: "partnerships", label: "Partenariats", description: "Collaborations, acquisitions" }
+      { id: "partnerships", label: "Partenariats", description: "Collaborations, acquisitions" },
+      { id: "fundraising", label: "Levée de fonds", description: "Financement, investissement, série A/B/C" }
     ]
   });
 });

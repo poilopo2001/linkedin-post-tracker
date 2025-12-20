@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { api, Company } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { Plus, Trash2, RefreshCw, ExternalLink, Building2, Search, X, Globe, MapPin, Briefcase } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function CompaniesPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -29,16 +30,29 @@ export default function CompaniesPage() {
   }
 
   async function handleCollect(companyId: number) {
+    // Trouver le nom de l'entreprise pour l'afficher dans les toasts
+    const company = companies.find(c => c.id === companyId);
+    const companyName = company?.name || 'Entreprise';
+
     // Ajouter à la liste des collectes en cours (permet le parallélisme)
     setCollectingIds(prev => new Set(prev).add(companyId));
+
+    // Afficher un toast de progression
+    const collectPromise = api.posts.collect({ company_id: companyId, max_posts: 20, classify: true });
+
+    toast.promise(collectPromise, {
+      loading: `🔍 Collecte en cours pour ${companyName}... (Scraping LinkedIn + Classification IA)`,
+      success: (data: any) => {
+        // Recharger les données après succès
+        setTimeout(() => loadCompanies(), 500);
+        const postsCount = data?.posts_collected || 0;
+        return `✅ ${companyName}: ${postsCount} post${postsCount > 1 ? 's' : ''} collecté${postsCount > 1 ? 's' : ''} et classifié${postsCount > 1 ? 's' : ''}`;
+      },
+      error: (err) => `❌ Erreur lors de la collecte pour ${companyName}`,
+    });
+
     try {
-      await api.posts.collect({ company_id: companyId, max_posts: 20, classify: true });
-      // Recharger seulement quand toutes les collectes sont finies
-      const remaining = new Set(collectingIds);
-      remaining.delete(companyId);
-      if (remaining.size === 0) {
-        await loadCompanies();
-      }
+      await collectPromise;
     } catch (err) {
       console.error('Error collecting:', err);
     } finally {

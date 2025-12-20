@@ -73,6 +73,11 @@ module.exports = {
             light: '#FCE7F3',
             dark: '#BE185D',
           },
+          fundraising: {
+            DEFAULT: '#22C55E',
+            light: '#DCFCE7',
+            dark: '#15803D',
+          },
         },
 
         // Semantic colors

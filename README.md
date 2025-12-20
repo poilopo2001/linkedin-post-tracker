@@ -100,22 +100,22 @@ cd api
 python -m uvicorn main:app --reload --port 8000
 ```
 
-**Terminal 2 - Dashboard (Next.js)**
+**Terminal 2 - Serveur TypeScript API (OBLIGATOIRE pour la collecte)**
+```bash
+npx tsx src/api-posts.ts
+```
+
+**Terminal 3 - Dashboard (Next.js)**
 ```bash
 cd dashboard
 npm run dev
 ```
 
-**Terminal 3 - Workflows TypeScript (optionnel)**
-```bash
-# Pour tester un workflow directement
-npx tsx src/workflow-tracker.ts scrape "https://linkedin.com/company/exemple"
-```
-
 ### Accès
 
-- **API** : http://localhost:8000
+- **API Python** : http://localhost:8000
 - **API Docs** : http://localhost:8000/docs
+- **API TypeScript** : http://localhost:3001
 - **Dashboard** : http://localhost:3000
 
 ---

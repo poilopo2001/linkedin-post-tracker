@@ -5,6 +5,7 @@ from typing import List, Optional
 from datetime import datetime, timedelta
 import sys
 import os
+import json
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import get_db
 from models import Company, Post, CollectionLog
@@ -189,6 +190,58 @@ def list_categories():
             {"id": "partnerships", "label": "Partenariats", "color": "#EF4444"},
             {"id": "fundraising", "label": "Levée de fonds", "color": "#22C55E"}
         ]
+    }
+
+
+@router.post("/reclassify")
+async def reclassify_posts(
+    company_id: Optional[int] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Re-classifie les posts existants (utile après ajout d'une nouvelle catégorie).
+    Si company_id est fourni, ne re-classifie que les posts de cette entreprise.
+    """
+    import httpx
+
+    # Récupérer les posts à re-classifier
+    query = db.query(Post)
+    if company_id:
+        query = query.filter(Post.company_id == company_id)
+
+    posts = query.all()
+
+    if not posts:
+        return {"success": True, "message": "Aucun post à re-classifier", "reclassified": 0}
+
+    # Re-classifier chaque post via l'agent
+    reclassified = 0
+    errors = 0
+
+    for post in posts:
+        try:
+            # Appeler l'agent de classification directement
+            from services.classifier import classify_post_content
+            result = await classify_post_content(post.content)
+
+            # Mettre à jour la classification
+            post.category = result.get("category")
+            post.sentiment = result.get("sentiment")
+            post.confidence_score = result.get("confidence_score")
+            post.keywords = json.dumps(result.get("keywords", []))
+
+            reclassified += 1
+        except Exception as e:
+            errors += 1
+            print(f"Erreur lors de la re-classification du post {post.id}: {e}")
+
+    db.commit()
+
+    return {
+        "success": True,
+        "message": f"{reclassified} posts re-classifiés, {errors} erreurs",
+        "reclassified": reclassified,
+        "errors": errors
     }
 
 

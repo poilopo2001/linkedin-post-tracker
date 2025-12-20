@@ -107,6 +107,56 @@ app.post("/collect/batch", async (req, res) => {
 });
 
 /**
+ * Classifier un post individuel
+ * POST /classify
+ * Body: { content: string }
+ */
+app.post("/classify", async (req, res) => {
+  const { content } = req.body;
+
+  if (!content || typeof content !== "string") {
+    return res.status(400).json({
+      error: "Missing or invalid 'content' field"
+    });
+  }
+
+  log(`API: Classification demandée pour un post`);
+
+  try {
+    const { Runner } = await import("@openai/agents");
+    const { postClassifierAgent } = await import("./agents-posts.js");
+
+    const runner = new Runner();
+
+    const classifyQuery = [{
+      role: "user" as const,
+      content: [{
+        type: "input_text" as const,
+        text: `Classifie ce post LinkedIn:
+
+CONTENU:
+${content}`
+      }]
+    }];
+
+    const classifyResult = await runner.run(postClassifierAgent, classifyQuery);
+
+    if (!classifyResult.finalOutput) {
+      throw new Error("No classification result");
+    }
+
+    log(`API: Classification terminée - ${classifyResult.finalOutput.category}`);
+
+    res.json(classifyResult.finalOutput);
+  } catch (error) {
+    log(`API: Erreur classification - ${error}`);
+    res.status(500).json({
+      error: String(error)
+    });
+  }
+});
+
+/**
  * Liste des catégories disponibles
  * GET /categories
  */

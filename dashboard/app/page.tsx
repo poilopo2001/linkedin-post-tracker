@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { api, DashboardStats } from '@/lib/api';
 import { CATEGORY_COLORS, CATEGORY_LABELS, formatNumber } from '@/lib/utils';
-import { Building2, FileText, TrendingUp, Clock, RefreshCw, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Building2, FileText, TrendingUp, Clock, RefreshCw, ArrowUpRight, ArrowDownRight, Sparkles } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+import { KPICardSkeleton } from '@/components/SkeletonLoader';
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -29,10 +30,35 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="flex flex-col items-center gap-3">
-          <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary-200 border-t-primary-500"></div>
-          <span className="text-sm text-neutral-500">Chargement des statistiques...</span>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-neutral-800">Dashboard</h1>
+            <p className="text-sm text-neutral-500 mt-1">Vue d'ensemble des posts LinkedIn</p>
+          </div>
+        </div>
+
+        {/* KPIs Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <KPICardSkeleton key={i} />
+          ))}
+        </div>
+
+        {/* Charts Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div key={i} className="bg-surface rounded-lg border border-neutral-200 shadow-card h-96 animate-pulse">
+              <div className="px-5 py-4 border-b border-neutral-100">
+                <div className="h-5 w-48 bg-neutral-200 rounded mb-2"></div>
+                <div className="h-3 w-64 bg-neutral-100 rounded"></div>
+              </div>
+              <div className="p-5 flex items-center justify-center h-64">
+                <div className="w-32 h-32 rounded-full bg-neutral-200"></div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -95,6 +121,7 @@ export default function DashboardPage() {
           icon={<Building2 className="w-5 h-5" />}
           color="primary"
           trend={stats.active_companies > 0 ? 'up' : undefined}
+          index={0}
         />
         <KPICard
           title="Posts totaux"
@@ -102,6 +129,7 @@ export default function DashboardPage() {
           subtitle="Tous temps"
           icon={<FileText className="w-5 h-5" />}
           color="success"
+          index={1}
         />
         <KPICard
           title="7 derniers jours"
@@ -110,6 +138,7 @@ export default function DashboardPage() {
           icon={<Clock className="w-5 h-5" />}
           color="thought-leadership"
           trend={stats.posts_last_7_days > 0 ? 'up' : undefined}
+          index={2}
         />
         <KPICard
           title="Top catégorie"
@@ -117,13 +146,14 @@ export default function DashboardPage() {
           subtitle={`${stats.posts_by_category[0]?.percentage || 0}% des posts`}
           icon={<TrendingUp className="w-5 h-5" />}
           color="promotional"
+          index={3}
         />
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Pie Chart - Catégories */}
-        <div className="bg-surface rounded-lg border border-neutral-200 shadow-card hover:shadow-card-hover transition-shadow duration-200">
+        <div className="bg-surface rounded-lg border border-neutral-200 shadow-card hover:shadow-card-hover hover:border-neutral-300 transition-all duration-200 animate-fade-in" style={{ animationDelay: '400ms' }}>
           <div className="px-5 py-4 border-b border-neutral-100">
             <h2 className="text-base font-semibold text-neutral-800">Répartition par catégorie</h2>
             <p className="text-xs text-neutral-500 mt-0.5">Distribution des posts par type de contenu</p>
@@ -163,13 +193,13 @@ export default function DashboardPage() {
             {/* Legend */}
             <div className="grid grid-cols-2 gap-2 mt-4">
               {pieData.slice(0, 6).map((item) => (
-                <div key={item.name} className="flex items-center gap-2">
+                <div key={item.name} className="group/legend flex items-center gap-2 p-1.5 rounded-md hover:bg-neutral-50 transition-all duration-200 cursor-default">
                   <div
-                    className="w-3 h-3 rounded-sm flex-shrink-0"
+                    className="w-3 h-3 rounded-sm flex-shrink-0 group-hover/legend:scale-125 group-hover/legend:shadow-sm transition-all duration-200"
                     style={{ backgroundColor: item.color }}
                   />
-                  <span className="text-xs text-neutral-600 truncate">{item.name}</span>
-                  <span className="text-xs font-medium text-neutral-800 ml-auto">{item.value}</span>
+                  <span className="text-xs text-neutral-600 truncate group-hover/legend:text-neutral-800 group-hover/legend:font-medium transition-all duration-200">{item.name}</span>
+                  <span className="text-xs font-medium text-neutral-800 ml-auto group-hover/legend:scale-110 transition-transform duration-200">{item.value}</span>
                 </div>
               ))}
             </div>
@@ -177,7 +207,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Bar Chart - Top entreprises */}
-        <div className="bg-surface rounded-lg border border-neutral-200 shadow-card hover:shadow-card-hover transition-shadow duration-200">
+        <div className="bg-surface rounded-lg border border-neutral-200 shadow-card hover:shadow-card-hover hover:border-neutral-300 transition-all duration-200 animate-fade-in" style={{ animationDelay: '500ms' }}>
           <div className="px-5 py-4 border-b border-neutral-100">
             <h2 className="text-base font-semibold text-neutral-800">Top entreprises actives</h2>
             <p className="text-xs text-neutral-500 mt-0.5">Classement par nombre de publications</p>
@@ -227,34 +257,35 @@ export default function DashboardPage() {
       </div>
 
       {/* Sentiment */}
-      <div className="bg-surface rounded-lg border border-neutral-200 shadow-card">
+      <div className="bg-surface rounded-lg border border-neutral-200 shadow-card hover:shadow-card-hover hover:border-neutral-300 transition-all duration-200 animate-fade-in" style={{ animationDelay: '600ms' }}>
         <div className="px-5 py-4 border-b border-neutral-100">
           <h2 className="text-base font-semibold text-neutral-800">Analyse de sentiment</h2>
           <p className="text-xs text-neutral-500 mt-0.5">Tonalité globale des publications</p>
         </div>
         <div className="p-5">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {stats.posts_by_sentiment.map(item => {
+            {stats.posts_by_sentiment.map((item, index) => {
               const config = getSentimentConfig(item.sentiment);
               return (
                 <div
                   key={item.sentiment}
-                  className={`flex items-center gap-4 p-4 rounded-lg ${config.bg}`}
+                  className={`group/sentiment flex items-center gap-4 p-4 rounded-lg ${config.bg} hover:shadow-md transition-all duration-200 cursor-default animate-fade-in border border-transparent hover:border-current/10`}
+                  style={{ animationDelay: `${700 + index * 100}ms` }}
                 >
-                  <div className={`w-12 h-12 rounded-full ${config.iconBg} flex items-center justify-center`}>
+                  <div className={`w-12 h-12 rounded-full ${config.iconBg} flex items-center justify-center group-hover/sentiment:scale-110 group-hover/sentiment:rotate-3 transition-all duration-200`}>
                     {config.icon}
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-neutral-800 capitalize">{item.sentiment}</p>
-                    <p className="text-2xl font-semibold text-neutral-900 mt-0.5">{item.count}</p>
+                    <p className="text-sm font-medium text-neutral-800 capitalize group-hover/sentiment:scale-105 transition-transform duration-200">{item.sentiment}</p>
+                    <p className="text-2xl font-semibold text-neutral-900 mt-0.5 group-hover/sentiment:scale-110 transition-transform duration-200">{item.count}</p>
                     <div className="flex items-center gap-1 mt-1">
-                      <div className={`w-full h-1.5 rounded-full bg-neutral-200`}>
+                      <div className={`w-full h-1.5 rounded-full bg-neutral-200 group-hover/sentiment:h-2 transition-all duration-200`}>
                         <div
-                          className={`h-full rounded-full ${config.bar}`}
+                          className={`h-full rounded-full ${config.bar} transition-all duration-300`}
                           style={{ width: `${item.percentage}%` }}
                         />
                       </div>
-                      <span className="text-xs text-neutral-500 ml-1">{item.percentage}%</span>
+                      <span className="text-xs text-neutral-500 ml-1 group-hover/sentiment:font-semibold group-hover/sentiment:text-neutral-700 transition-all duration-200">{item.percentage}%</span>
                     </div>
                   </div>
                 </div>
@@ -274,6 +305,7 @@ function KPICard({
   icon,
   color,
   trend,
+  index = 0,
 }: {
   title: string;
   value: string | number;
@@ -281,50 +313,58 @@ function KPICard({
   icon: React.ReactNode;
   color: 'primary' | 'success' | 'thought-leadership' | 'promotional';
   trend?: 'up' | 'down';
+  index?: number;
 }) {
   const colorConfig = {
     primary: {
       iconBg: 'bg-primary-500/10',
       iconText: 'text-primary-500',
       accent: 'border-l-primary-500',
+      gradient: 'hover:bg-gradient-to-br hover:from-primary-50/50 hover:to-transparent',
     },
     success: {
       iconBg: 'bg-success/10',
       iconText: 'text-success',
       accent: 'border-l-success',
+      gradient: 'hover:bg-gradient-to-br hover:from-success-light/30 hover:to-transparent',
     },
     'thought-leadership': {
       iconBg: 'bg-category-thought-leadership/10',
       iconText: 'text-category-thought-leadership',
       accent: 'border-l-category-thought-leadership',
+      gradient: 'hover:bg-gradient-to-br hover:from-category-thought-leadership-light/30 hover:to-transparent',
     },
     promotional: {
       iconBg: 'bg-category-promotional/10',
       iconText: 'text-category-promotional',
       accent: 'border-l-category-promotional',
+      gradient: 'hover:bg-gradient-to-br hover:from-category-promotional-light/30 hover:to-transparent',
     },
   };
 
   const config = colorConfig[color];
 
   return (
-    <div className={`bg-surface rounded-lg border border-neutral-200 shadow-card hover:shadow-card-hover transition-all duration-200 p-5 border-l-[3px] ${config.accent}`}>
+    <div
+      className={`group bg-surface rounded-lg border border-neutral-200 shadow-card hover:shadow-card-hover hover:border-neutral-300 transition-all duration-200 p-5 border-l-[3px] ${config.accent} ${config.gradient} animate-fade-in cursor-default`}
+      style={{ animationDelay: `${index * 100}ms` }}
+    >
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide">{title}</p>
           <div className="flex items-baseline gap-2 mt-2">
-            <p className="text-2xl font-semibold text-neutral-800">
+            <p className="text-2xl font-semibold text-neutral-800 group-hover:scale-105 transition-transform duration-200">
               {typeof value === 'number' ? formatNumber(value) : value}
             </p>
             {trend && (
-              <span className={`flex items-center text-xs font-medium ${trend === 'up' ? 'text-success' : 'text-error'}`}>
+              <span className={`flex items-center text-xs font-medium ${trend === 'up' ? 'text-success' : 'text-error'} group-hover:scale-110 transition-transform duration-200`}>
                 {trend === 'up' ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
               </span>
             )}
           </div>
           <p className="text-xs text-neutral-400 mt-1">{subtitle}</p>
         </div>
-        <div className={`p-2.5 rounded-lg ${config.iconBg} ${config.iconText}`}>
+        <div className={`p-2.5 rounded-lg ${config.iconBg} ${config.iconText} group-hover:scale-110 group-hover:rotate-3 transition-all duration-200`}>
           {icon}
         </div>
       </div>

@@ -12,6 +12,7 @@ class PostCategory(str, Enum):
     csr = "csr"
     internal_news = "internal_news"
     partnerships = "partnerships"
+    fundraising = "fundraising"
 
 
 class Sentiment(str, Enum):

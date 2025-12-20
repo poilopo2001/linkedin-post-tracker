@@ -14,7 +14,11 @@ const brightDataMCP = hostedMcpTool({
   allowedTools: [
     "search_engine",
     "scrape_as_markdown",
-    "web_data_linkedin_company_profile"
+    "web_data_linkedin_company_profile",
+    "scraping_browser_navigate",
+    "scraping_browser_snapshot",
+    "scraping_browser_scroll",
+    "scraping_browser_get_text"
   ],
   requireApproval: "never"
 });
@@ -30,7 +34,8 @@ export const postCollectorAgent = new Agent({
 STRATÉGIE:
 1. Utilise web_data_linkedin_company_profile avec l'URL LinkedIn fournie
 2. Le profil retourné contient un champ "updates" avec les posts récents
-3. Pour chaque post dans "updates", extrais:
+3. RETOURNE ABSOLUMENT TOUS LES POSTS trouvés dans "updates", sans exception
+4. Pour chaque post dans "updates", extrais:
    - post_id: identifiant unique si disponible
    - content: le texte complet du post
    - posted_at: la date de publication (format ISO si possible)
@@ -51,6 +56,42 @@ STRATÉGIE:
 IMPORTANT:
 - Ne fais qu'UN SEUL appel à web_data_linkedin_company_profile
 - Retourne TOUS les posts trouvés dans "updates"
+- Si un champ n'est pas disponible, utilise null`,
+  model: "gpt-5-nano-2025-08-07",
+  tools: [brightDataMCP],
+  outputType: PostCollectionResultSchema
+});
+
+/**
+ * Agent 1b: Collecteur avancé avec scraping browser
+ * Pour collecter un grand nombre de posts (> 10)
+ */
+export const postCollectorBrowserAgent = new Agent({
+  name: "LinkedIn Post Collector (Browser)",
+  instructions: `Tu collectes un grand nombre de posts LinkedIn via le scraping browser.
+
+STRATÉGIE:
+1. Utilise scraping_browser_navigate pour aller sur l'URL LinkedIn fournie
+2. Utilise scraping_browser_snapshot pour voir le contenu initial
+3. Scroll progressivement avec scraping_browser_scroll pour charger plus de posts
+4. À chaque scroll, utilise scraping_browser_get_text pour extraire les nouveaux posts
+5. Continue jusqu'à avoir collecté le nombre demandé de posts ou jusqu'à ce qu'il n'y ait plus de nouveaux posts
+
+EXTRACTION DE DONNÉES:
+Pour chaque post visible, extrais:
+- post_id: identifiant unique si disponible dans l'URL ou data attributes
+- content: le texte complet du post
+- posted_at: date de publication (cherche des patterns comme "il y a 2 jours", "3h", etc.)
+- likes: nombre de réactions/likes
+- comments: nombre de commentaires
+- shares: nombre de partages
+- media_type: "text", "image", "video", "document", "poll", "article"
+- url: lien vers le post
+
+IMPORTANT:
+- Scroll plusieurs fois si nécessaire pour charger suffisamment de posts
+- Déduplique les posts (même content ou post_id)
+- Retourne TOUS les posts uniques collectés
 - Si un champ n'est pas disponible, utilise null`,
   model: "gpt-5-nano-2025-08-07",
   tools: [brightDataMCP],

@@ -13,6 +13,7 @@ export const CATEGORY_COLORS: Record<string, string> = {
   csr: '#06B6D4',
   internal_news: '#EC4899',
   partnerships: '#EF4444',
+  fundraising: '#14B8A6',
 };
 
 export const CATEGORY_LABELS: Record<string, string> = {
@@ -23,6 +24,7 @@ export const CATEGORY_LABELS: Record<string, string> = {
   csr: 'RSE',
   internal_news: 'Actualités internes',
   partnerships: 'Partenariats',
+  fundraising: 'Levée de fonds',
 };
 
 export const SENTIMENT_COLORS: Record<string, string> = {

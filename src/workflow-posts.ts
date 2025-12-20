@@ -1,5 +1,5 @@
 import { Runner, AgentInputItem, withTrace } from "@openai/agents";
-import { postCollectorAgent, postClassifierAgent } from "./agents-posts.js";
+import { postCollectorAgent, postCollectorBrowserAgent, postClassifierAgent } from "./agents-posts.js";
 import type {
   PostsWorkflowConfig,
   ClassifiedCollectionResult,
@@ -47,7 +47,11 @@ Récupère tous les posts récents disponibles (maximum ${maxPosts}).`
       }]
     }];
 
-    const collectResult = await runner.run(postCollectorAgent, collectQuery);
+    // Utiliser l'agent browser pour les collectes > 10 posts
+    const agentToUse = maxPosts > 10 ? postCollectorBrowserAgent : postCollectorAgent;
+    log(`Utilisation de l'agent: ${agentToUse.name} (max_posts: ${maxPosts})`);
+
+    const collectResult = await runner.run(agentToUse, collectQuery);
 
     if (!collectResult.finalOutput || !collectResult.finalOutput.posts) {
       log("Aucun post trouvé");

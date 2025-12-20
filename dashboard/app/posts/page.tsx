@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { api, Post, Company } from '@/lib/api';
 import { CATEGORY_COLORS, CATEGORY_LABELS, formatDate, truncateText } from '@/lib/utils';
-import { Search, Filter, ThumbsUp, MessageCircle, Share2, FileText, X, ChevronDown, Building2, RefreshCw, ExternalLink } from 'lucide-react';
+import { Search, Filter, ThumbsUp, MessageCircle, Share2, FileText, X, ChevronDown, Building2, RefreshCw, ExternalLink, Sparkles } from 'lucide-react';
+import { PostCardSkeleton } from '@/components/SkeletonLoader';
 
 export default function PostsPage() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -201,16 +202,15 @@ export default function PostsPage() {
 
       {/* Posts list */}
       {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <div className="flex flex-col items-center gap-3">
-            <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary-200 border-t-primary-500"></div>
-            <span className="text-sm text-neutral-500">Chargement des posts...</span>
-          </div>
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <PostCardSkeleton key={i} />
+          ))}
         </div>
       ) : (
         <div className="space-y-4">
-          {posts.map(post => (
-            <PostCard key={post.id} post={post} />
+          {posts.map((post, index) => (
+            <PostCard key={post.id} post={post} index={index} />
           ))}
 
           {/* Empty State */}
@@ -244,7 +244,7 @@ export default function PostsPage() {
   );
 }
 
-function PostCard({ post }: { post: Post }) {
+function PostCard({ post, index }: { post: Post; index: number }) {
   const categoryColor = CATEGORY_COLORS[post.category || ''] || '#64748B';
   const categoryLabel = CATEGORY_LABELS[post.category || ''] || post.category || 'Non classé';
 
@@ -257,9 +257,12 @@ function PostCard({ post }: { post: Post }) {
   const sentiment = sentimentConfig[post.sentiment as keyof typeof sentimentConfig] || sentimentConfig.neutral;
 
   return (
-    <div className="bg-surface rounded-lg border border-neutral-200 shadow-card hover:shadow-card-hover transition-all duration-200 overflow-hidden">
+    <div
+      className="group bg-surface rounded-lg border border-neutral-200 shadow-card hover:shadow-card-hover hover:border-neutral-300 transition-all duration-200 overflow-hidden animate-fade-in"
+      style={{ animationDelay: `${index * 50}ms` }}
+    >
       {/* Category indicator bar */}
-      <div className="h-1" style={{ backgroundColor: categoryColor }} />
+      <div className="h-1 group-hover:h-1.5 transition-all duration-200" style={{ backgroundColor: categoryColor }} />
 
       <div className="p-5">
         <div className="flex items-start justify-between gap-4">
@@ -298,20 +301,20 @@ function PostCard({ post }: { post: Post }) {
 
             {/* Engagement metrics */}
             <div className="flex items-center gap-5">
-              <div className="flex items-center gap-1.5 text-neutral-500">
-                <div className="w-7 h-7 rounded-full bg-primary-500/10 flex items-center justify-center">
+              <div className="flex items-center gap-1.5 text-neutral-500 hover:text-primary-600 transition-colors group/engagement cursor-default">
+                <div className="w-7 h-7 rounded-full bg-primary-500/10 flex items-center justify-center group-hover/engagement:bg-primary-500/20 group-hover/engagement:scale-110 transition-all duration-200">
                   <ThumbsUp className="w-3.5 h-3.5 text-primary-500" />
                 </div>
                 <span className="text-sm font-medium">{post.likes || 0}</span>
               </div>
-              <div className="flex items-center gap-1.5 text-neutral-500">
-                <div className="w-7 h-7 rounded-full bg-category-events/10 flex items-center justify-center">
+              <div className="flex items-center gap-1.5 text-neutral-500 hover:text-category-events transition-colors group/engagement cursor-default">
+                <div className="w-7 h-7 rounded-full bg-category-events/10 flex items-center justify-center group-hover/engagement:bg-category-events/20 group-hover/engagement:scale-110 transition-all duration-200">
                   <MessageCircle className="w-3.5 h-3.5 text-category-events" />
                 </div>
                 <span className="text-sm font-medium">{post.comments || 0}</span>
               </div>
-              <div className="flex items-center gap-1.5 text-neutral-500">
-                <div className="w-7 h-7 rounded-full bg-category-partnerships/10 flex items-center justify-center">
+              <div className="flex items-center gap-1.5 text-neutral-500 hover:text-category-partnerships transition-colors group/engagement cursor-default">
+                <div className="w-7 h-7 rounded-full bg-category-partnerships/10 flex items-center justify-center group-hover/engagement:bg-category-partnerships/20 group-hover/engagement:scale-110 transition-all duration-200">
                   <Share2 className="w-3.5 h-3.5 text-category-partnerships" />
                 </div>
                 <span className="text-sm font-medium">{post.shares || 0}</span>
@@ -322,25 +325,26 @@ function PostCard({ post }: { post: Post }) {
           {/* Tags */}
           <div className="flex flex-col items-end gap-2 flex-shrink-0">
             <span
-              className="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-semibold text-white shadow-sm"
+              className="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-semibold text-white shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200 cursor-default"
               style={{ backgroundColor: categoryColor }}
             >
               {categoryLabel}
             </span>
             {post.sentiment && (
-              <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${sentiment.bg} ${sentiment.text}`}>
+              <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${sentiment.bg} ${sentiment.text} hover:scale-105 transition-all duration-200 cursor-default border border-transparent hover:border-current/20`}>
                 {sentiment.label}
               </span>
             )}
             {post.confidence_score && (
-              <div className="flex items-center gap-1.5 mt-1">
-                <div className="w-16 h-1.5 bg-neutral-200 rounded-full overflow-hidden">
+              <div className="flex items-center gap-1.5 mt-1 group/confidence cursor-default">
+                <Sparkles className="w-3 h-3 text-success opacity-60 group-hover/confidence:opacity-100 transition-opacity" />
+                <div className="w-16 h-1.5 bg-neutral-200 rounded-full overflow-hidden group-hover/confidence:h-2 transition-all duration-200">
                   <div
-                    className="h-full bg-success rounded-full"
+                    className="h-full bg-gradient-to-r from-success to-success-dark rounded-full transition-all duration-300"
                     style={{ width: `${post.confidence_score}%` }}
                   />
                 </div>
-                <span className="text-[10px] text-neutral-400">{post.confidence_score}%</span>
+                <span className="text-[10px] text-neutral-400 font-medium group-hover/confidence:text-success transition-colors">{post.confidence_score}%</span>
               </div>
             )}
           </div>

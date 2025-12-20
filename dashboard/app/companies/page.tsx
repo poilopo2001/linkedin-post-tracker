@@ -1,21 +1,35 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { api, Company } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
-import { Plus, Trash2, RefreshCw, ExternalLink, Building2, Search, X, Globe, MapPin, Briefcase } from 'lucide-react';
+import { Plus, Trash2, RefreshCw, RotateCcw, ExternalLink, Building2, Search, X, Globe, MapPin, Briefcase, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
+import { TableSkeleton } from '@/components/SkeletonLoader';
+import { PostCountPopover } from '@/components/PostCountPopover';
 
 export default function CompaniesPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [collectingIds, setCollectingIds] = useState<Set<number>>(new Set());
+  const [reclassifyingIds, setReclassifyingIds] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
+  const [popoverOpenFor, setPopoverOpenFor] = useState<number | null>(null);
+  const collectButtonRefs = useRef<Map<number, React.RefObject<HTMLButtonElement>>>(new Map());
 
   useEffect(() => {
     loadCompanies();
   }, []);
+
+  // Créer refs pour chaque bouton de collecte
+  useEffect(() => {
+    companies.forEach(company => {
+      if (!collectButtonRefs.current.has(company.id)) {
+        collectButtonRefs.current.set(company.id, { current: null });
+      }
+    });
+  }, [companies]);
 
   async function loadCompanies() {
     try {
@@ -29,7 +43,10 @@ export default function CompaniesPage() {
     }
   }
 
-  async function handleCollect(companyId: number) {
+  async function handleCollect(companyId: number, maxPosts: number = 20) {
+    // Fermer le popover
+    setPopoverOpenFor(null);
+
     // Trouver le nom de l'entreprise pour l'afficher dans les toasts
     const company = companies.find(c => c.id === companyId);
     const companyName = company?.name || 'Entreprise';
@@ -38,7 +55,7 @@ export default function CompaniesPage() {
     setCollectingIds(prev => new Set(prev).add(companyId));
 
     // Afficher un toast de progression
-    const collectPromise = api.posts.collect({ company_id: companyId, max_posts: 20, classify: true });
+    const collectPromise = api.posts.collect({ company_id: companyId, max_posts: maxPosts, classify: true });
 
     toast.promise(collectPromise, {
       loading: `🔍 Collecte en cours pour ${companyName}... (Scraping LinkedIn + Classification IA)`,
@@ -63,6 +80,37 @@ export default function CompaniesPage() {
         if (next.size === 0) {
           loadCompanies();
         }
+        return next;
+      });
+    }
+  }
+
+  async function handleReclassify(companyId: number) {
+    const company = companies.find(c => c.id === companyId);
+    const companyName = company?.name || 'Entreprise';
+
+    setReclassifyingIds(prev => new Set(prev).add(companyId));
+
+    const reclassifyPromise = api.posts.reclassify(companyId);
+
+    toast.promise(reclassifyPromise, {
+      loading: `🔄 Re-classification en cours pour ${companyName}... (détection catégorie fundraising)`,
+      success: (data: any) => {
+        setTimeout(() => loadCompanies(), 500);
+        const count = data?.reclassified || 0;
+        return `✅ ${companyName}: ${count} post${count > 1 ? 's' : ''} re-classifié${count > 1 ? 's' : ''}`;
+      },
+      error: () => `❌ Erreur lors de la re-classification pour ${companyName}`,
+    });
+
+    try {
+      await reclassifyPromise;
+    } catch (err) {
+      console.error('Error reclassifying:', err);
+    } finally {
+      setReclassifyingIds(prev => {
+        const next = new Set(prev);
+        next.delete(companyId);
         return next;
       });
     }
@@ -144,12 +192,7 @@ export default function CompaniesPage() {
 
       {/* Table */}
       {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <div className="flex flex-col items-center gap-3">
-            <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary-200 border-t-primary-500"></div>
-            <span className="text-sm text-neutral-500">Chargement des entreprises...</span>
-          </div>
-        </div>
+        <TableSkeleton rows={5} />
       ) : (
         <div className="bg-surface rounded-lg border border-neutral-200 shadow-card overflow-hidden">
           <table className="w-full">
@@ -173,8 +216,12 @@ export default function CompaniesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
-              {filteredCompanies.map(company => (
-                <tr key={company.id} className="hover:bg-neutral-50/50 transition-colors">
+              {filteredCompanies.map((company, index) => (
+                <tr
+                  key={company.id}
+                  className="group hover:bg-gradient-to-r hover:from-primary-50/30 hover:to-transparent transition-all duration-200 animate-fade-in"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-primary-500/10 flex items-center justify-center flex-shrink-0">
@@ -196,8 +243,8 @@ export default function CompaniesPage() {
                   </td>
                   <td className="px-5 py-4">
                     {company.industry ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-neutral-100 text-xs font-medium text-neutral-600">
-                        <Briefcase className="w-3 h-3" />
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-gradient-to-br from-neutral-100 to-neutral-50 border border-neutral-200/50 text-xs font-medium text-neutral-700 hover:border-neutral-300 hover:shadow-sm transition-all duration-200 cursor-default">
+                        <Briefcase className="w-3 h-3 text-neutral-500" />
                         {company.industry}
                       </span>
                     ) : (
@@ -205,7 +252,7 @@ export default function CompaniesPage() {
                     )}
                   </td>
                   <td className="px-5 py-4 text-center">
-                    <span className="inline-flex items-center justify-center min-w-[2.5rem] px-2.5 py-1 rounded-full text-xs font-semibold bg-primary-500/10 text-primary-600">
+                    <span className="inline-flex items-center justify-center min-w-[2.5rem] px-2.5 py-1 rounded-full text-xs font-semibold bg-primary-500/10 text-primary-600 hover:bg-primary-500/20 hover:scale-110 transition-all duration-200 cursor-default">
                       {company.post_count || 0}
                     </span>
                   </td>
@@ -216,20 +263,58 @@ export default function CompaniesPage() {
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex items-center justify-end gap-1">
+                      {(() => {
+                        const buttonRef = collectButtonRefs.current.get(company.id) || { current: null };
+                        if (!collectButtonRefs.current.has(company.id)) {
+                          collectButtonRefs.current.set(company.id, buttonRef);
+                        }
+                        return (
+                          <>
+                            <button
+                              ref={buttonRef}
+                              onClick={() => setPopoverOpenFor(company.id)}
+                              disabled={collectingIds.has(company.id)}
+                              className="relative group/btn p-2 text-neutral-500 hover:text-primary-600 hover:bg-primary-50 hover:scale-110 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:hover:scale-100"
+                              title="Collecter les posts LinkedIn"
+                            >
+                              <RefreshCw className={`w-4 h-4 ${collectingIds.has(company.id) ? 'animate-spin' : ''}`} />
+                              <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-neutral-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover/btn:opacity-100 transition-opacity pointer-events-none">
+                                Collecter les posts
+                              </span>
+                            </button>
+
+                            {/* Render popover si ouvert pour cette entreprise */}
+                            {popoverOpenFor === company.id && buttonRef.current && (
+                              <PostCountPopover
+                                onSelect={(count) => handleCollect(company.id, count)}
+                                onClose={() => setPopoverOpenFor(null)}
+                                anchorRef={buttonRef}
+                              />
+                            )}
+                          </>
+                        );
+                      })()}
                       <button
-                        onClick={() => handleCollect(company.id)}
-                        disabled={collectingIds.has(company.id)}
-                        className="p-2 text-neutral-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all disabled:opacity-50"
-                        title="Collecter les posts"
+                        onClick={() => handleReclassify(company.id)}
+                        disabled={reclassifyingIds.has(company.id)}
+                        className="relative group/btn p-2 text-neutral-500 hover:text-category-fundraising hover:bg-category-fundraising-light hover:scale-110 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:hover:scale-100"
+                        title="Re-classifier avec IA"
                       >
-                        <RefreshCw className={`w-4 h-4 ${collectingIds.has(company.id) ? 'animate-spin' : ''}`} />
+                        <RotateCcw className={`w-4 h-4 ${reclassifyingIds.has(company.id) ? 'animate-spin' : ''}`} />
+                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-neutral-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover/btn:opacity-100 transition-opacity pointer-events-none flex items-center gap-1">
+                          <Sparkles className="w-3 h-3" />
+                          Re-classifier (IA)
+                        </span>
                       </button>
                       <button
                         onClick={() => handleDelete(company.id)}
-                        className="p-2 text-neutral-500 hover:text-error hover:bg-error-light rounded-lg transition-all"
-                        title="Supprimer"
+                        className="relative group/btn p-2 text-neutral-500 hover:text-error hover:bg-error-light hover:scale-110 rounded-lg transition-all duration-200"
+                        title="Supprimer l'entreprise"
                       >
                         <Trash2 className="w-4 h-4" />
+                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-neutral-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover/btn:opacity-100 transition-opacity pointer-events-none">
+                          Supprimer
+                        </span>
                       </button>
                     </div>
                   </td>

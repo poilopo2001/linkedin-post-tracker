@@ -361,6 +361,10 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(params || {}),
       }),
+    reclassify: (company_id?: number) =>
+      fetchApi<any>(`/api/posts/reclassify${company_id ? `?company_id=${company_id}` : ''}`, {
+        method: 'POST',
+      }),
     categories: () => fetchApi<{ categories: { id: string; label: string; color: string }[] }>('/api/posts/categories'),
   },
 
@@ -387,14 +391,14 @@ export const api = {
 
   // Profile (User Company)
   profile: {
-    get: () => fetchApi<UserCompanyProfile | null>('/api/profile/'),
+    get: () => fetchApi<UserCompanyProfile | null>('/api/profile'),
     create: (data: UserCompanyProfileCreate) =>
-      fetchApi<UserCompanyProfile>('/api/profile/', {
+      fetchApi<UserCompanyProfile>('/api/profile', {
         method: 'POST',
         body: JSON.stringify(data),
       }),
     update: (data: Partial<UserCompanyProfileCreate>) =>
-      fetchApi<UserCompanyProfile>('/api/profile/', {
+      fetchApi<UserCompanyProfile>('/api/profile', {
         method: 'PUT',
         body: JSON.stringify(data),
       }),
